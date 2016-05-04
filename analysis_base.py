@@ -1,11 +1,14 @@
 #!/usr/bin/env python
-# md5: 4d9ecbbd9936701f713e759637bf7a7e
+# md5: 2b9681577fdcbfae98e62e2b8813b2d5
 # coding: utf-8
 
 import urlparse
 from glob import glob
 import os
 from os import path
+
+from leveldbmemoized import leveldbmemoized, set_leveldbmemoized_basedir
+from msgpackmemoized import msgpackmemoized, set_msgpackmemoized_basedir
 
 from memoized import memoized
 import numpy
@@ -23,18 +26,31 @@ pyximport.install(setup_args={"include_dirs":numpy.get_include()})
 from decompress_lzstring_base64_cython import decompressFromBase64
 
 
-tmi_overrides = {
-  'basedir': None,
-}
+tmi_basedir_override = None
+def set_tmi_basedir(basedir):
+  global tmi_basedir_override
+  tmi_basedir_override = basedir
 
 @memoized
 def get_basedir():
-  if tmi_overrides['basedir'] != None:
-    return tmi_overrides['basedir']
+  if tmi_basedir_override != None:
+    return tmi_basedir_override
   pathbase = path.dirname(path.realpath('__file__'))
   output = [x for x in glob(pathbase + '/browsingsurvey_*')]
   output.sort(reverse=True)
   return output[0]
+
+@memoized
+def get_sdir():
+  return get_basedir().replace('/browsingsurvey_', '/cached_')
+
+
+if not path.exists(get_sdir()):
+  os.mkdir(get_sdir())
+set_leveldbmemoized_basedir(get_sdir())
+set_msgpackmemoized_basedir(get_sdir())
+
+
 
 def get_basedir_file(filename):
   return get_basedir() + '/' + filename
@@ -103,7 +119,7 @@ def iterate_hist_visits_for_user(user):
   return get_user_to_hist_visits()[user]
 
 
-@memoized
+@leveldbmemoized
 def get_history_valid_hids_for_user(user):
   hid_with_history_pages = set()
   hid_to_totalparts = {}
@@ -136,7 +152,7 @@ def get_history_valid_hids_for_user(user):
   return output
 
 
-@memoized
+@leveldbmemoized
 def get_history_pages_for_user(user):
   valid_hids = get_history_valid_hids_for_user(user)
   if len(valid_hids) == 0:
@@ -150,7 +166,7 @@ def get_history_pages_for_user(user):
     return data
   return []
 
-@memoized
+@leveldbmemoized
 def get_history_visits_for_user(user):
   valid_hids = get_history_valid_hids_for_user(user)
   if len(valid_hids) == 0:
@@ -181,7 +197,7 @@ def get_survey_results_by_user():
 def get_survey_results_for_user(user):
   return get_survey_results_by_user()[user]
 
-@memoized
+@msgpackmemoized
 def list_users():
   history_pages_by_user = get_user_to_hist_pages()
   history_visits_by_user = get_user_to_hist_visits()
@@ -220,7 +236,7 @@ def compute_per_user(func):
     output[user] = func(user)
   return output
 
-@memoized
+@leveldbmemoized
 def get_history_ordered_visits_for_user(user):
   url_to_visits = get_history_visits_for_user(user)
   ordered_visits = []
@@ -231,7 +247,7 @@ def get_history_ordered_visits_for_user(user):
   ordered_visits.sort(key=itemgetter('visitTime'))
   return ordered_visits
 
-@memoized
+@leveldbmemoized
 def get_domain_to_num_history_visits_for_user(user):
   output = Counter()
   for url,visits in get_history_visits_for_user(user).viewitems():
@@ -240,23 +256,5 @@ def get_domain_to_num_history_visits_for_user(user):
   return output
 
 
-print list_users()
 
-
-#print get_history_visits_for_user('jess').keys()
-
-
-#print get_history_pages()[0].keys()
-
-
-#print get_history_visits()[0].keys()
-
-
-print_counter(get_domain_to_num_history_visits_for_user('jess'))
-
-
-#print iterate_hist_pages_for_user('jess').keys()
-
-
-print_counter(get_domain_to_num_history_visits_for_user('shivaal'))
 

@@ -2,3 +2,5 @@ Cython==0.23.5
 numpy==1.10.4
 plotly==1.9.6
 ujson==1.35
+leveldb==0.193
+msgpack-python==0.4.7
