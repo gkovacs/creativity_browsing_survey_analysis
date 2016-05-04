@@ -1,0 +1,3 @@
+[submodule "rescuetime_categories"]
+	path = rescuetime_categories
+	url = https://github.com/gkovacs/rescuetime_categories

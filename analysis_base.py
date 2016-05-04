@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: cea1570f0387b2beb887dfd931b41a04
+# md5: d8802105adff1504b0362cef891013a2
 # coding: utf-8
 
 import urlparse
@@ -19,6 +19,7 @@ try:
   import ujson as json
 except:
   import json
+import msgpack
 
 from collections import Counter
 from operator import itemgetter
@@ -283,4 +284,34 @@ def get_hours_spent_on_domains_for_user(user):
 @leveldbmemoized
 def get_hours_spent_online_for_user(user):
   return sum(get_hours_spent_on_domains_for_user(user).values())
+
+
+@memoized
+def get_domain_to_category():
+  return msgpack.load(open('domain_to_category.msgpack'))
+
+@memoized
+def get_domain_to_productivity():
+  return msgpack.load(open('domain_to_productivity.msgpack'))
+
+def domain_to_category(domain):
+  return get_domain_to_category().get(domain, 'Uncategorized')
+
+def domain_to_productivity(domain):
+  return get_domain_to_productivity().get(domain, 0)
+
+
+def get_hours_spent_on_domain_category_for_user(user):
+  output = Counter()
+  for domain,hours in get_hours_spent_on_domains_for_user(user).items():
+    category = domain_to_category(domain)
+    output[category] += hours
+  return output
+
+def get_hours_spent_on_domain_productivity_for_user(user):
+  output = Counter()
+  for domain,hours in get_hours_spent_on_domains_for_user(user).items():
+    productivity = domain_to_productivity(domain)
+    output[productivity] += hours
+  return output
 
