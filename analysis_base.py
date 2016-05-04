@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: 2b9681577fdcbfae98e62e2b8813b2d5
+# md5: cea1570f0387b2beb887dfd931b41a04
 # coding: utf-8
 
 import urlparse
@@ -12,6 +12,8 @@ from msgpackmemoized import msgpackmemoized, set_msgpackmemoized_basedir
 
 from memoized import memoized
 import numpy
+
+from reconstruct_focus_times import ReconstructFocusTimesBaseline
 
 try:
   import ujson as json
@@ -256,5 +258,29 @@ def get_domain_to_num_history_visits_for_user(user):
   return output
 
 
+@leveldbmemoized
+def get_reconstructed_focus_times_for_user(user):
+  ordered_visits = get_history_ordered_visits_for_user(user)
+  reconstructor = ReconstructFocusTimesBaseline()
+  for visit in ordered_visits:
+    reconstructor.process_history_line(visit)
+  return reconstructor.get_output()
 
+@leveldbmemoized
+def get_milliseconds_spent_on_domains_for_user(user):
+  domain_to_timespent = Counter()
+  for span in get_reconstructed_focus_times_for_user(user):
+    url = span['url']
+    domain = url_to_domain(url)
+    duration = span['end'] - span['start']
+    domain_to_timespent[domain] += duration
+  return domain_to_timespent
+
+@leveldbmemoized
+def get_hours_spent_on_domains_for_user(user):
+  return {k:v/(1000.0*3600) for k,v in get_milliseconds_spent_on_domains_for_user(user).items()}
+
+@leveldbmemoized
+def get_hours_spent_online_for_user(user):
+  return sum(get_hours_spent_on_domains_for_user(user).values())
 
