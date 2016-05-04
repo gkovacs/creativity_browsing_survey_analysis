@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: d8802105adff1504b0362cef891013a2
+# md5: 52d678658224c049cdae9225b67698cb
 # coding: utf-8
 
 import urlparse
@@ -12,6 +12,7 @@ from msgpackmemoized import msgpackmemoized, set_msgpackmemoized_basedir
 
 from memoized import memoized
 import numpy
+import yaml
 
 from reconstruct_focus_times import ReconstructFocusTimesBaseline
 
@@ -231,6 +232,9 @@ def print_counter(counter, **kwargs):
   for item in keys_and_values[:num]:
     print item['key'], item['val']
 
+def print_yaml(val):
+  print yaml.safe_dump(val)
+
 
 def compute_per_user(func):
   output = {}
@@ -288,11 +292,11 @@ def get_hours_spent_online_for_user(user):
 
 @memoized
 def get_domain_to_category():
-  return msgpack.load(open('domain_to_category.msgpack'))
+  return msgpack.load(open('rescuetime_categories/domain_to_category.msgpack'))
 
 @memoized
 def get_domain_to_productivity():
-  return msgpack.load(open('domain_to_productivity.msgpack'))
+  return msgpack.load(open('rescuetime_categories/domain_to_productivity.msgpack'))
 
 def domain_to_category(domain):
   return get_domain_to_category().get(domain, 'Uncategorized')
