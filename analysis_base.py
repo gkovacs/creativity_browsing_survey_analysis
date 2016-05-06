@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: 52d678658224c049cdae9225b67698cb
+# md5: 0b9f6000d34bf6d8bf38b39203e0e28a
 # coding: utf-8
 
 import urlparse
@@ -222,6 +222,17 @@ def get_results_by_user():
   return output
 
 
+def get_fraction_correct_for_user(user):
+  data = get_survey_results_for_user(user)
+  correct = data['num_correct']
+  total = data['num_total']
+  return float(correct) / total
+
+def get_taken_before_for_user(user):
+  data = get_survey_results_for_user(user)
+  return int(data['taken_before'] == 'yes')
+
+
 def url_to_domain(url):
   return urlparse.urlparse(url).netloc
 
@@ -318,4 +329,38 @@ def get_hours_spent_on_domain_productivity_for_user(user):
     productivity = domain_to_productivity(domain)
     output[productivity] += hours
   return output
+
+
+def get_hours_spent_productivity_neg2_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return data[-2]
+
+def get_hours_spent_productivity_neg2or1_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return data[-2] + data[-1]
+
+def get_hours_spent_productivity_pos2_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return data[2]
+
+def get_hours_spent_productivity_pos2or1_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return data[2] + data[1]
+
+
+def get_fraction_spent_productivity_neg2_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return data[-2] / float(sum(data.values()))
+
+def get_fraction_spent_productivity_neg2or1_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return (data[-2] + data[-1]) / float(sum(data.values()))
+
+def get_fraction_spent_productivity_pos2_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return data[2] / float(sum(data.values()))
+
+def get_fraction_spent_productivity_pos2or1_for_user(user):
+  data = get_hours_spent_on_domain_productivity_for_user(user)
+  return (data[2] + data[1]) / float(sum(data.values()))
 
