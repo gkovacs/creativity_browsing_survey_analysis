@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: c8c7e2dc9266b7657d2d6f82057abf8d
+# md5: af317caae95cb7406fd0ecaf1faaec0b
 # coding: utf-8
 
 from analysis_base import *
@@ -8,7 +8,9 @@ from scipy.stats import pearsonr
 
 
 def is_user_blacklisted(user):
-  if user in ['jess', 'geza', 'shivaal', 'gezaeducrowdtest']:
+  if user in ['jess', 'geza', 'shivaal', 'gezaeducrowdtest', 'A1VL7507UONPX0', 'A207IHY6GERCFO']: # browsingsurvey
+    return True
+  if user in ['A1XH05IKC77OXO', 'A1GRL544SI7RTG']: # browsingsurvey2
     return True
   if user.startswith('guest'):
     return True
@@ -34,7 +36,7 @@ def func_correlation(func1, func2):
   xdata = [func1(x) for x in list_allowed_users()]
   ydata = [func2(x) for x in list_allowed_users()]
   r,p = pearsonr(xdata, ydata)
-  print {'r': r, 'r^2': r**2, 'p': p}
+  print_dict_sorted({'r': r, 'r^2': r**2, 'p': p})
   plot_scatter_for_func_pair(func1, func2)
 
 def print_results_for_func_pair(func1, func2):

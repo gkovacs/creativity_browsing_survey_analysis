@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: 0b9f6000d34bf6d8bf38b39203e0e28a
+# md5: d636f54a4af08eadbb8298acfab7688b
 # coding: utf-8
 
 import urlparse
@@ -7,8 +7,8 @@ from glob import glob
 import os
 from os import path
 
-from leveldbmemoized import leveldbmemoized, set_leveldbmemoized_basedir
-from msgpackmemoized import msgpackmemoized, set_msgpackmemoized_basedir
+from leveldbmemoized import leveldbmemoized, set_leveldbmemoized_basedir, get_leveldbmemoized_basedir
+from msgpackmemoized import msgpackmemoized, set_msgpackmemoized_basedir, get_msgpackmemoized_basedir
 
 from memoized import memoized
 import numpy
@@ -35,24 +35,30 @@ def set_tmi_basedir(basedir):
   global tmi_basedir_override
   tmi_basedir_override = basedir
 
+tmi_prefix_override = 'browsingsurvey'
+def set_tmi_prefix(prefix):
+  global tmi_prefix_override
+  tmi_prefix_override = prefix
+
 @memoized
 def get_basedir():
   if tmi_basedir_override != None:
     return tmi_basedir_override
   pathbase = path.dirname(path.realpath('__file__'))
-  output = [x for x in glob(pathbase + '/browsingsurvey_*')]
+  output = [x for x in glob(pathbase + '/' + tmi_prefix_override + '_*')]
   output.sort(reverse=True)
   return output[0]
 
 @memoized
 def get_sdir():
-  return get_basedir().replace('/browsingsurvey_', '/cached_')
+  return get_basedir().replace('/' + tmi_prefix_override + '_', '/cached_' + tmi_prefix_override + '_')
 
 
-if not path.exists(get_sdir()):
-  os.mkdir(get_sdir())
-set_leveldbmemoized_basedir(get_sdir())
-set_msgpackmemoized_basedir(get_sdir())
+def initialize_analysis_base():
+  if not path.exists(get_sdir()):
+    os.mkdir(get_sdir())
+  set_leveldbmemoized_basedir(get_sdir())
+  set_msgpackmemoized_basedir(get_sdir())
 
 
 
@@ -61,6 +67,9 @@ def get_basedir_file(filename):
 
 def jsonload_basedir_file(filename):
   return json.load(open(get_basedir_file(filename)))
+
+def basedir_exists(filename):
+  return path.exists(get_basedir_file(filename))
 
 
 def decompress_data_lzstring_base64(data):
@@ -90,7 +99,9 @@ def get_history_visits():
 
 @memoized
 def get_survey_results():
-  return jsonload_basedir_file('surveyresults.json')
+  if basedir_exists('surveyresults.json'):
+    return jsonload_basedir_file('surveyresults.json')
+  return jsonload_basedir_file('testresults.json')
 
 @memoized
 def get_user_to_hist_pages():
@@ -243,6 +254,17 @@ def print_counter(counter, **kwargs):
   for item in keys_and_values[:num]:
     print item['key'], item['val']
 
+def stringify_dict_sorted(counter):
+  output = []
+  #multiline = kwargs.get('multiline', True)
+  for key in sorted(counter.viewkeys()):
+    val = counter[key]
+    output.append(str(key) + ': ' + str(val))
+  return '{' + ', '.join(output) + '}'
+
+def print_dict_sorted(counter):
+  print stringify_dict_sorted(counter)
+
 def print_yaml(val):
   print yaml.safe_dump(val)
 
@@ -315,6 +337,14 @@ def domain_to_category(domain):
 def domain_to_productivity(domain):
   return get_domain_to_productivity().get(domain, 0)
 
+@memoized
+def list_productivity_levels():
+  return sorted(list(set(get_domain_to_productivity().values())))
+
+@memoized
+def list_categories():
+  return sorted(list(set(get_domain_to_category().values())))
+
 
 def get_hours_spent_on_domain_category_for_user(user):
   output = Counter()
@@ -363,4 +393,13 @@ def get_fraction_spent_productivity_pos2_for_user(user):
 def get_fraction_spent_productivity_pos2or1_for_user(user):
   data = get_hours_spent_on_domain_productivity_for_user(user)
   return (data[2] + data[1]) / float(sum(data.values()))
+
+
+def get_hours_spent_social_networking_for_user(user):
+  data = get_hours_spent_on_domain_category_for_user(user)
+  return data['General Social Networking']
+
+def get_fraction_spent_social_networking_for_user(user):
+  data = get_hours_spent_on_domain_category_for_user(user)
+  return data['General Social Networking'] / float(sum(data.values()))
 

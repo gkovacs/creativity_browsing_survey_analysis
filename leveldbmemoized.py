@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: de79926b7d364389c370d99dcce51f2f
+# md5: 61d09d29b8d0546ca71b941e5ecc66fe
 # coding: utf-8
 
 import leveldb
@@ -11,6 +11,9 @@ leveldbmemoized_basedir = 'leveldb_memoized'
 def set_leveldbmemoized_basedir(basedir):
   global leveldbmemoized_basedir
   leveldbmemoized_basedir = basedir
+
+def get_leveldbmemoized_basedir(basedir):
+  return leveldbmemoized_basedir
 
 
 class leveldbmemoized(object):

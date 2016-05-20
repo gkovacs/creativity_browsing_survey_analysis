@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: ce76a7721bdd789054d07557b272c5c5
+# md5: 81037534c87b6980a1713954b85c2e4a
 # coding: utf-8
 
 import msgpack
@@ -14,6 +14,9 @@ def set_msgpackmemoized_basedir(basedir):
   global msgpackmemoized_basedir
   msgpackmemoized_basedir = basedir
 
+def get_msgpackmemoized_basedir():
+  return msgpackmemoized_basedir
+
 
 
 
@@ -22,8 +25,10 @@ def set_msgpackmemoized_basedir(basedir):
 class msgpackmemoized(object):
   def __init__(self, f):
     self.f = f
-    self.filename = msgpackmemoized_basedir + '/' + f.__name__ + '.msgpack'
+    self.filename = None
   def __call__(self):
+    if self.filename == None:
+      self.filename = msgpackmemoized_basedir + '/' + self.f.__name__ + '.msgpack'
     if path.exists(self.filename):
       return msgpack.load(open(self.filename))
     result = self.f()
