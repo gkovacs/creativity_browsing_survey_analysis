@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# md5: d636f54a4af08eadbb8298acfab7688b
+# md5: 60afd99e537df37ea869d4a115acf045
 # coding: utf-8
 
 import urlparse
@@ -232,6 +232,18 @@ def get_results_by_user():
     output[user] = {k: v(user) for k,v in fields.viewitems()}
   return output
 
+
+def get_fraction_three_back_correct_for_user(user):
+  data = get_survey_results_for_user(user)['three_back_results']
+  correct = data['num_correct']
+  total = data['num_total']
+  return float(correct) / total
+
+def get_fraction_two_back_correct_for_user(user):
+  data = get_survey_results_for_user(user)['two_back_results']
+  correct = data['num_correct']
+  total = data['num_total']
+  return float(correct) / total
 
 def get_fraction_correct_for_user(user):
   data = get_survey_results_for_user(user)
